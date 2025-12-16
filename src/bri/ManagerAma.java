@@ -4,11 +4,11 @@ import java.io.*;
 import java.net.*;
 import java.lang.reflect.Constructor;
 
-class ServiceBRi implements Runnable {
+public class ManagerAma implements Runnable {
 
 	private Socket client;
 
-	ServiceBRi(Socket socket) {
+	public ManagerAma(Socket socket) {
 		client = socket;
 	}
 
@@ -18,16 +18,18 @@ class ServiceBRi implements Runnable {
 			PrintWriter out = new PrintWriter(client.getOutputStream(), true);
 
 			// 1. Envoyer le menu des services
-			// On remplace \n par ## car le client lit souvent ligne par ligne (readLine)
-			String menu = ServiceRegistry.toStringue() + "\nTapez le numéro de service désiré :";
-			out.println(menu.replaceAll("\n", "##"));
+			String menu = "Voici la liste des services disponibles : \n" + ServiceRegistry.toStringue() + "\n\nTapez le numero de service desire :";
+			// potentiellement mettre le out.println avc replace dans 
+			// une autre methode d'un fichier dans un package utils
+			out.println(menu.replace("\n", "#space#")); 
 
 			// 2. Lire le choix du client
 			String line = in.readLine();
-			if (line == null) return;
+			if (line == null)
+				return;
 			int choix = Integer.parseInt(line);
 
-			// 3. Récupérer la classe du service
+			// 3. Recuper la classe du service
 			Class<?> serviceClass = ServiceRegistry.getServiceClass(choix);
 
 			if (serviceClass != null) {
@@ -36,23 +38,30 @@ class ServiceBRi implements Runnable {
 				Constructor<?> constructor = serviceClass.getConstructor(Socket.class);
 				Object serviceInstance = constructor.newInstance(this.client);
 
-				// 5. Invocation de la méthode service()
-				// Puisque la classe implémente l'interface Service, le cast est sûr et plus simple que l'invoke
+				// 5. Invocation de la methode service()
+				// Puisque la classe implemente l'interface Service, le cast est sur et plus
+				// simple que l'invoke
+				// simple que l'invoke
 				((Service) serviceInstance).service();
 			} else {
-				out.println("Numéro de service invalide.");
+				out.println("Numero de service invalide.");
 			}
 
 		} catch (Exception e) {
-			System.err.println("Erreur dans ServiceBRi : " + e);
+			System.err.println("Erreur dans ManagerAma : " + e);
 			e.printStackTrace();
 		} finally {
-			// On s'assure que la socket est fermée si le service n'a pas pris le relais ou a planté
-			try { if (!client.isClosed()) client.close(); } catch (IOException e2) {}
+			// On s'assure que la socket est fermee si le service n'a pas pris le relais ou
+			// a plantee
+			try {
+				if (!client.isClosed())
+					client.close();
+			} catch (IOException e2) {
+			}
 		}
 	}
 
-	// ... reste du code (finalize, start) inchangé ...
+	// ... reste du code (finalize, start) inchanger ...
 	public void start() {
 		(new Thread(this)).start();
 	}
