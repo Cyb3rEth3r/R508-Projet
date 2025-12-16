@@ -19,7 +19,7 @@ public class ClassValidator {
     }
 
     public boolean validateAbstract(Class<?> c) {
-        return Modifier.isAbstract(c.getModifiers());
+        return !Modifier.isAbstract(c.getModifiers());
     }
 
     public boolean validatePublic(Class<?> c) {
@@ -40,7 +40,7 @@ public class ClassValidator {
 
     public boolean validateAttribute(Class<?> c) {
         boolean isValid = false;
-        Field[] fields = c.getFields();
+        Field[] fields = c.getDeclaredFields();
         for (Field f : fields) {
             if (f.getType().equals(Socket.class) && Modifier.isPrivate(f.getModifiers()) && Modifier.isFinal(f.getModifiers())) {
                 isValid = true;
