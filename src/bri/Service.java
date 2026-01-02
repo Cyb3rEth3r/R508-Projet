@@ -1,6 +1,6 @@
 package bri;
 
-// rien à ajouter ici
+// rien Ã  ajouter ici
 
 public interface Service {
 	void service();

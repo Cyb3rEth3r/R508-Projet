@@ -21,7 +21,7 @@ public class ManagerAma implements Runnable {
 			String menu = "Voici la liste des services disponibles : \n" + ServiceRegistry.toStringue() + "\n\nTapez le numero de service desire :";
 			// potentiellement mettre le out.println avc replace dans 
 			// une autre methode d'un fichier dans un package utils
-			out.println(menu.replace("\n", "#space#")); 
+			out.println(menu.replaceAll("\n", "#space#"));
 
 			// 2. Lire le choix du client
 			String line = in.readLine();
@@ -34,7 +34,7 @@ public class ManagerAma implements Runnable {
 
 			if (serviceClass != null) {
 				// 4. Instanciation dynamique avec constructeur(Socket)
-				// La norme impose un constructeur public prenant une Socket [cite: 90]
+				// La norme impose un constructeur public prenant une Socket
 				Constructor<?> constructor = serviceClass.getConstructor(Socket.class);
 				Object serviceInstance = constructor.newInstance(this.client);
 

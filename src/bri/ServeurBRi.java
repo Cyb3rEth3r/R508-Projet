@@ -7,13 +7,16 @@ import java.net.*;
 
 public class ServeurBRi implements Runnable {
 	private ServerSocket listen_socket;
+	private int port;
 	private Class<? extends Runnable> serviceClass;
 	
 	// Cree un serveur TCP - objet de la classe ServerSocket
 	public ServeurBRi(int port, Class<? extends Runnable> serviceClass) {
+		this.port = port;
 		try {
 			listen_socket = new ServerSocket(port);
 			this.serviceClass = serviceClass;
+			System.out.println("Serveur lancé sur le port " + port + " avec le service " + serviceClass.getSimpleName());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -27,6 +30,7 @@ public class ServeurBRi implements Runnable {
 			while(true)
 			{
 				Socket client = listen_socket.accept();
+				// Pour chaque connexion, on instancie le service spécifique
 				try {
 					// Instancie dynamiquement le service avec le client socket puis appelle service()
 					Runnable serviceInstance = (Runnable) serviceClass.getConstructor(Socket.class).newInstance(client);
@@ -39,7 +43,7 @@ public class ServeurBRi implements Runnable {
 		}
 		catch (IOException e) { 
 			try {this.listen_socket.close();} catch (IOException e1) {}
-			System.err.println("Pb sur le port d'ecoute :"+e);
+			System.err.println("Arret du serveur sur le port d'écoute : "+e);
 		}
 	}
 
