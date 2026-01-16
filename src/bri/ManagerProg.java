@@ -118,7 +118,7 @@ public class ManagerProg implements Runnable {
         // - Fournir un nouveau service ;
         // - Mettre-a-jour un service ;
         // - Declarer un changement d'adresse de son serveur ftp
-        // - (Demarrer/arreter un service;
+        // - (Demarrer/arreter un service);
         // - Desinstaller un service.)
         boolean continuer = true;
         while (continuer) {
