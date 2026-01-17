@@ -3,7 +3,6 @@ package bri;
 import java.io.*;
 import java.net.*;
 import java.lang.reflect.Constructor;
-import java.net.URLClassLoader;
 
 public class ManagerProg implements Runnable {
 
@@ -77,11 +76,13 @@ public class ManagerProg implements Runnable {
         String login = in.readLine();
         out.println("Password :");
         String pass = in.readLine();
+        String msg;
 
         if (ProgrammerRegistry.authenticate(login, pass)) {
             this.nom = login;
             this.lienFtp = ProgrammerRegistry.getFtpUrl(login);
-            out.println("Authentification réussie !");
+            msg = "Authentification réussie !\nAppuyez sur Entrée pour continuer...";
+            out.println(msg.replace("\n", "#space#"));
             return true;
         } else {
             out.println("Echec : Login ou mot de passe incorrect.");
@@ -92,6 +93,7 @@ public class ManagerProg implements Runnable {
     boolean inscription(PrintWriter out, BufferedReader in) throws IOException {
         out.println("Choisissez un Login (sera votre nom de package) :");
         String login = in.readLine();
+        String msg;
 
         if (ProgrammerRegistry.exists(login)) {
             out.println("Ce login est déjà pris.");
@@ -109,7 +111,9 @@ public class ManagerProg implements Runnable {
         ProgrammerRegistry.register(login, pass, ftp);
         this.nom = login;
         this.lienFtp = ftp;
-        out.println("Inscription réussie !");
+        msg = "Inscription réussie !\nAppuyez sur Entrée pour continuer...";
+        out.println(msg.replace("\n", "#space#"));
+        in.readLine();
         return true;
     }
 
@@ -122,20 +126,24 @@ public class ManagerProg implements Runnable {
         // - Desinstaller un service.)
         boolean continuer = true;
         while (continuer) {
-            String menu = "\n--- MENU PROGRAMMEUR (" + this.nom + ") ---\n" + "1 - Fournir un nouveau service\n" + "2 - Mettre à jour un service\n" + "3 - Changer l'adresse FTP\n" + "4 - Deconnexion\n" + "Votre choix :";
+            String menu = "\n--- MENU PROGRAMMEUR (" + this.nom + ") ---\n" + "1 - Fournir un nouveau service\n" + "2 - Mettre à jour un service\n" + "3 - Changer l'adresse FTP\n" + "4 - Desinstaller un service\n" + "5 - Déconnexion\n" + "Votre choix :";
             out.println(menu.replace("\n", "#space#"));
             String line = in.readLine();
             if (line == null) break;
             switch (line) {
                 case "1":
-                    ajouterOuMajService(out, in);
+                    ajouterService(out, in);
                     break;
                 case "2":
-                    //TODO : Implementer la logique de remplacement de service (mise a jour) dans ServiceRegistery
+                    mettreAJourService(out, in);
+                    break;
                 case "3":
                     changerFtp(out, in);
                     break;
                 case "4":
+                    desinstallerService(out, in);
+                    break;
+                case "5":
                     continuer = false;
                     break;
                 default:
@@ -144,31 +152,70 @@ public class ManagerProg implements Runnable {
         }
     }
 
-    private void ajouterOuMajService(PrintWriter out, BufferedReader in) throws IOException {
+    private void ajouterService(PrintWriter out, BufferedReader in) throws IOException {
         out.println("Nom complet de la classe (ex: " + this.nom + ".MaClasse) :");
         String className = in.readLine();
+        String msg;
 
         // CONTROLE DU PACKAGE
         // "Un programmeur doit mettre tout ce qu'il développe dans un package portant comme nom son login"
         if (!className.startsWith(this.nom + ".")) {
-            out.println("ERREUR NORME BRi : Votre classe doit être dans le package '" + this.nom + "'.");
-            out.println("Attendu : " + this.nom + ".NomDeLaClasse");
-            out.println("Reçu : " + className);
+            msg = "ERREUR NORME BRi : Votre classe doit être dans le package '" + this.nom + "'.\nAttendu : " + this.nom + ".NomDeLaClasse\nReçu : " + className + "\nAppuyez sur Entrée pour continuer...";
+            out.println(msg.replace("\n", "#space#"));
+            in.readLine();
             return;
         }
 
         try {
-            out.println("Chargement depuis " + this.lienFtp);
 
             URL[] urls = new URL[]{new URL(this.lienFtp)};
-            URLClassLoader loader = new URLClassLoader(urls);
+            URLClassLoader loader = new URLClassLoader(urls, this.getClass().getClassLoader());
 
             // On force le rechargement en créant un nouveau loader à chaque fois
             Class<?> loadedClass = loader.loadClass(className);
 
             // Validation et Ajout
-            // TODO : il faut qu'on fasse en sorte que ServiceRegistry gère l'unicité ou l'écrasement
             ServiceRegistry.addService(loadedClass);
+
+            msg = "Charger depuis :" + this.lienFtp + "\nAppuyez sur Entrée pour continuer...";
+            out.println(msg.replace("\n", "#space#"));
+            in.readLine();
+
+        } catch (ClassNotFoundException e) {
+            out.println("ERREUR : Classe introuvable sur votre FTP.");
+        } catch (Exception e) {
+            out.println("ERREUR : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void mettreAJourService(PrintWriter out, BufferedReader in) throws IOException {
+        out.println("Nom complet de la classe à mettre à jour (ex: " + this.nom + ".MaClasse) :");
+        String className = in.readLine();
+        String msg;
+
+        // CONTROLE DU PACKAGE
+        if (!className.startsWith(this.nom + ".")) {
+            msg = "ERREUR NORME BRi : Votre classe doit être dans le package '" + this.nom + "'.\nAttendu : " + this.nom + ".NomDeLaClasse\nReçu : " + className + "\nAppuyez sur Entrée pour continuer...";
+            out.println(msg.replace("\n", "#space#"));
+            in.readLine();
+            return;
+        }
+
+        try {
+
+            URL[] urls = new URL[]{new URL(this.lienFtp)};
+            URLClassLoader loader = new URLClassLoader(urls, this.getClass().getClassLoader());
+
+            // On force le rechargement en créant un nouveau loader à chaque fois
+            Class<?> loadedClass = loader.loadClass(className);
+
+            // Validation et Mise à jour
+            ServiceRegistry.updateService(loadedClass);
+
+            msg = "Service mis à jour depuis :" + this.lienFtp + "\nAppuyez sur Entrée pour continuer...";
+            out.println(msg.replace("\n", "#space#"));
+            in.readLine();
 
         } catch (ClassNotFoundException e) {
             out.println("ERREUR : Classe introuvable sur votre FTP.");
@@ -185,6 +232,39 @@ public class ManagerProg implements Runnable {
         ProgrammerRegistry.updateFtpUrl(this.nom, newFtp);
         this.lienFtp = newFtp;
         out.println("Adresse FTP mise à jour.");
+    }
+
+    private void desinstallerService(PrintWriter out, BufferedReader in) throws IOException {
+        out.println("Nom complet de la classe à désinstaller (ex: " + this.nom + ".MaClasse) :");
+        String className = in.readLine();
+        String msg;
+
+        // CONTROLE DU PACKAGE
+        if (!className.startsWith(this.nom + ".")) {
+            msg = "ERREUR NORME BRi : Votre classe doit être dans le package '" + this.nom + "'.\nAttendu : " + this.nom + ".NomDeLaClasse\nReçu : " + className + "\nAppuyez sur Entrée pour continuer...";
+            out.println(msg.replace("\n", "#space#"));
+            in.readLine();
+            return;
+        }
+
+        try {
+            Class<?> loadedClass = Class.forName(className);
+
+            if (ServiceRegistry.verifyServiceExists(loadedClass)) {
+                ServiceRegistry.removeService(loadedClass);
+                msg = "Service désinstallé avec succès.\nAppuyez sur Entrée pour continuer...";
+            } else {
+                msg = "ERREUR : Le service spécifié n'existe pas.\nAppuyez sur Entrée pour continuer...";
+            }
+            out.println(msg.replace("\n", "#space#"));
+            in.readLine();
+
+        } catch (ClassNotFoundException e) {
+            out.println("ERREUR : Classe introuvable.");
+        } catch (Exception e) {
+            out.println("ERREUR : " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }

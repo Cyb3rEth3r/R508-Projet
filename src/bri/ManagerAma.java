@@ -41,7 +41,6 @@ public class ManagerAma implements Runnable {
 				// 5. Invocation de la methode service()
 				// Puisque la classe implemente l'interface Service, le cast est sur et plus
 				// simple que l'invoke
-				// simple que l'invoke
 				((Service) serviceInstance).service();
 			} else {
 				out.println("Numero de service invalide.");
