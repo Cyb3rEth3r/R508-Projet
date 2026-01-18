@@ -19,8 +19,6 @@ public class ManagerAma implements Runnable {
 
 			// 1. Envoyer le menu des services
 			String menu = "Voici la liste des services disponibles : \n" + ServiceRegistry.toStringue() + "\n\nTapez le numero de service desire :";
-			// potentiellement mettre le out.println avc replace dans 
-			// une autre methode d'un fichier dans un package utils
 			out.println(menu.replaceAll("\n", "#space#"));
 
 			// 2. Lire le choix du client

@@ -58,7 +58,7 @@ public class ServiceRegistry {
 	// Liste les activit�s pr�sentes en invoquant la m�thode statique toStringue()
 	// de chaque service
 	public static String toStringue() {
-		StringBuilder result = new StringBuilder("Activit�s pr�sentes :\n");
+		StringBuilder result = new StringBuilder("Activites presentes :\n");
 
 		for (int i = 0; i < servicesClasses.size(); i++) {
 			Class<?> c = servicesClasses.get(i);
