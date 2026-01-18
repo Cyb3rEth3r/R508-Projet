@@ -211,7 +211,7 @@ public class ManagerProg implements Runnable {
             Class<?> loadedClass = loader.loadClass(className);
 
             // Validation et Mise à jour
-            ServiceRegistry.updateService(loadedClass);
+            ServiceRegistry.updateService(loadedClass, className);
 
             msg = "Service mis à jour depuis :" + this.lienFtp + "\nAppuyez sur Entrée pour continuer...";
             out.println(msg.replace("\n", "#space#"));
@@ -241,29 +241,21 @@ public class ManagerProg implements Runnable {
 
         // CONTROLE DU PACKAGE
         if (!className.startsWith(this.nom + ".")) {
-            msg = "ERREUR NORME BRi : Votre classe doit être dans le package '" + this.nom + "'.\nAttendu : " + this.nom + ".NomDeLaClasse\nReçu : " + className + "\nAppuyez sur Entrée pour continuer...";
-            out.println(msg.replace("\n", "#space#"));
+            out.println("ERREUR : Mauvais package.\nAppuyez sur Entrée...");
             in.readLine();
             return;
         }
 
         try {
-            Class<?> loadedClass = Class.forName(className);
+            // CORRECTION : On passe le NOM (String) directement au registre
+            ServiceRegistry.removeService(className);
 
-            if (ServiceRegistry.verifyServiceExists(loadedClass)) {
-                ServiceRegistry.removeService(loadedClass);
-                msg = "Service désinstallé avec succès.\nAppuyez sur Entrée pour continuer...";
-            } else {
-                msg = "ERREUR : Le service spécifié n'existe pas.\nAppuyez sur Entrée pour continuer...";
-            }
+            msg = "Service désinstallé avec succès.\nAppuyez sur Entrée pour continuer...";
             out.println(msg.replace("\n", "#space#"));
             in.readLine();
 
-        } catch (ClassNotFoundException e) {
-            out.println("ERREUR : Classe introuvable.");
         } catch (Exception e) {
             out.println("ERREUR : " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

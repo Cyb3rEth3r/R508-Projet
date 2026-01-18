@@ -19,31 +19,54 @@ public class ServiceRegistry {
 
 		if (validator.validation(c)) {
 			servicesClasses.add(c);
-			System.out.println("Service enregistr� : " + c.getName());
+			System.out.println("Service enregistre : " + c.getName());
 		} else {
 			throw new Exception("La classe " + c.getName() + " ne respecte pas la norme BRi.");
 		}
 	}
 
-	public static void updateService(Class<?> c) throws Exception {
-		if (!verifyServiceExists(c)) {
+	synchronized public static void updateService(Class<?> c, String className) throws Exception {
+		if (!verifyServiceExists(className)) {
 			throw new Exception("Le service " + c.getName() + " n'existe pas et ne peut pas être mis à jour.");
 		}
 		// Supprimer l'ancienne version si elle existe
-		removeService(c);
+		removeService(className);
 		addService(c);
 	}
 
-	public static void removeService(Class<?> c) throws Exception {
-		if (!verifyServiceExists(c)) {
-			throw new Exception("Le service " + c.getName() + " n'existe pas et ne peut pas être désinstallé.");
-		}
-		servicesClasses.remove(c);
-		System.out.println("Service désinstallé : " + c.getName());
-	}
+	public static void removeService(String className) throws Exception {
+        synchronized (servicesClasses) {
+            Class<?> c = getServiceClassByName(className);
+            if (c == null) {
+                throw new Exception("Le service " + className + " n'existe pas.");
+            }
+            servicesClasses.remove(c); // On retire l'objet exact trouvé dans la liste
+            System.out.println("Service désinstallé : " + className);
+        }
+    }
+
+	private static Class<?> getServiceClassByName(String name) {
+        synchronized (servicesClasses) {
+            for (Class<?> c : servicesClasses) {
+                if (c.getName().equals(name)) {
+                    return c;
+                }
+            }
+        }
+        return null;
+    }
 
 	public static boolean verifyServiceExists(Class<?> c) {
 		return servicesClasses.contains(c);
+	}
+
+	public static boolean verifyServiceExists(String className) {
+		for (Class<?> c : servicesClasses) {
+			if (c.getName().equals(className)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// Renvoie la classe de service correspondante (numService - 1 car l'affichage
